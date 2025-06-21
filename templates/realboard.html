@@ -1,0 +1,45 @@
+{% extends "layout/html5.html" %}    
+{% block body %}    
+<!-- 调试信息 - 帮助确认 tdoc 对象的内容 -->  
+<script>  
+console.log('tdoc:', {{ tdoc | json }});  
+console.log('tdoc._id:', '{{ tdoc._id }}');  
+console.log('tdoc.docId:', '{{ tdoc.docId }}');  
+</script>  
+  
+<!-- 设置 WebSocket URL，只包含路径部分 -->  
+{{ set(UiContext, 'socketUrl', "d/" + tdoc.domainId + "/realboard-conn?cid=" + (tdoc._id.toHexString() if tdoc._id else (tdoc.docId | string if tdoc.docId else ''))) }}  
+{{ set(UiContext, 'payload', payload) }}  
+  
+<!-- 备用方案：从 URL 中提取比赛 ID -->  
+<script>  
+// 如果模板变量失败，从 URL 中提取比赛 ID  
+const contestId = window.location.pathname.match(/\/contest\/([^\/]+)/)?.[1];  
+const domainIdFromUrl = window.location.pathname.match(/\/d\/([^/]+)/)?.[1];  
+console.log('从 URL 提取的比赛 ID:', contestId);  
+console.log('从 URL 提取的 Domain ID:', domainIdFromUrl);  
+  
+// 检查 socketUrl 是否包含有效的 cid  
+if (UiContext.socketUrl && UiContext.socketUrl.includes('cid=undefined') && contestId && domainIdFromUrl) {  
+    console.log('修正 socketUrl，使用从 URL 提取的 ID');  
+    UiContext.socketUrl = `/d/${domainIdFromUrl}/realboard-conn?cid=${contestId}`;  
+} else if (UiContext.socketUrl && UiContext.socketUrl.includes('cid=') && !UiContext.socketUrl.includes('cid=undefined') && !UiContext.socketUrl.includes('cid=' + contestId) && contestId && domainIdFromUrl) {  
+    // 如果 cid 已经有值但不是 contestId，也尝试修正  
+    console.log('修正 socketUrl，使用从 URL 提取的 ID (cid已存在但不同)');  
+    UiContext.socketUrl = `/d/${domainIdFromUrl}/realboard-conn?cid=${contestId}`;  
+}  
+console.log('最终 socketUrl:', UiContext.socketUrl);  
+</script>  
+  
+<header class="header">  
+  <span class="rank">#Rank</span>  
+  <span class="content">  
+    <span class="title">Contest</span>  
+    <span class="copyright">@Hydro/Realboard</span>  
+  </span>  
+  <span class="solved">Solved</span>  
+  <span class="penalty">Penalty</span>  
+</header>  
+  
+<link rel="stylesheet" href="/realboard.css?_={{ Date.now() }}" />  
+{% endblock %}

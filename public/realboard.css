@@ -1,0 +1,149 @@
+body {
+    color: #eee;
+    background-color: #121212;
+}
+
+/* 两个显示区域的布局 */
+.rank-list-b-stage {
+    background: #1a1a1a;
+    min-height: 720px; /* 9个队伍的高度 */
+    position: relative;
+    overflow: hidden;
+}
+
+.rank-list-item.even {
+    background-color: transparent;
+}
+.rank-list-item.odd {
+    background-color: #202020;
+}
+
+.rank-list-single {
+    background-color: #1a1a1a;
+    min-height: 80px; /* 1个队伍的高度 */
+    position: relative;
+    overflow: hidden;
+    margin-top: 20px; /* 与上面的区域保持距离 */
+}
+
+.rank-list {
+    background-color: #1a1a1a;
+}
+.rank-list-item {
+    padding: 10px 0;
+    height: 80px;
+    position: absolute;
+    width: 100%;
+    left: 0;
+    box-sizing: border-box;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    vertical-align: middle;
+}
+.header {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    height: 40px;
+}
+.header .rank, .header .solved, .header .penalty {
+    width: 90px;
+    font-size: 20px;
+    text-align: center;
+}
+.header .content {
+    flex-grow: 1;
+    text-align: left;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.header .content .title {
+    flex-grow: 1;
+    font-size: 20px;
+    text-align: left;
+    display: flex;
+}
+.header .content .copyright {
+    color: #8a919b;
+    font-size: 15px;
+}
+.rank-list-item .rank, .rank-list-item .solved, .rank-list-item .penalty {
+    padding: 10px 0px;
+    width: 90px;
+    font-size: 40px;
+    text-align: center;
+    vertical-align: middle;
+}
+.rank-list-item .avatar {
+    height: 60px;
+    width: 60px;
+    border-radius: 5px;
+    margin-right: 15px;
+}
+.rank-list-item .content {
+    flex-grow: 1;
+    height: 60px
+}
+.rank-list-item .content .name {
+    font-size: 30px;
+    margin-bottom: 6px;
+}
+.rank-list-item .content .problems {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.rank-list-item .problems .item {
+    padding: 2px;
+    width: 95px;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 20px;
+}
+.ac {
+    background-color: #009c00;
+}
+.failed, .WA, .wa {
+    background-color: #dd514c;
+}
+.frozen {
+    background-color: #3c6ef6;
+}
+.untouched {
+    background-color: #282828;
+    color: #8a919b;
+}
+.pnd {
+    background-color: #ff9800;
+    color: #000;
+}
+.blink {
+    animation: blink 500ms infinite;
+    -webkit-animation: blink 500ms infinite;
+}
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+@-webkit-keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+.uncover {
+    animation: flashing 1000ms infinite;
+    -webkit-animation: flashing 1000ms infinite; /*Safari and Chrome*/
+}
+@keyframes flashing {
+    from { background-color: #3c6ef6 }
+    50% { background-color: #7699ea }
+    to { background-color: #3c6ef6 }
+}
+@-webkit-keyframes flashing {/*Safari and Chrome*/
+    from { background-color: #3c6ef6 }
+    50% { background-color: #7699ea }
+    to { background-color: #3c6ef6 }
+} 
