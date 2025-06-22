@@ -1,3 +1,26 @@
+/**
+ * Realboard - HydroOJ 实时滚榜插件前端组件
+ * 
+ * 本项目基于 Hydro 官方 onsite-toolkit 开发
+ * 原始项目: https://github.com/hydro-dev/Hydro/tree/master/packages/onsite-toolkit
+ * 许可证: GNU Affero General Public License v3.0 (AGPL-3.0)
+ * 
+ * Copyright (c) 2025 HandsomeRun
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import { addPage, NamedPage, React, ReactDOM } from '@hydrooj/ui-default';
 import { animated, easings, useSprings, useTransition } from '@react-spring/web';
 import { ResolverInput } from '../interface';
@@ -31,15 +54,24 @@ function submissions(problem) {
 
 function processRank(teams) {
   const clone = [...teams];
-  clone.sort((a, b) => b.score - a.score || a.penalty - b.penalty || b.total - a.total);
+  clone.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score; // solved 降序
+    if (a.penalty !== b.penalty) return a.penalty - b.penalty; // penalty 升序
+    return 0; // 并列
+  });
   let rank = 1;
-  for (const team of clone) {
-    if (!team.exclude) {
-      team.rank = rank;
-      rank++;
-    } else {
+  for (let i = 0; i < clone.length; i++) {
+    const team = clone[i];
+    if (team.exclude) {
       team.rank = -1;
+      continue;
     }
+    if (i > 0 && clone[i].score === clone[i - 1].score && clone[i].penalty === clone[i - 1].penalty) {
+      team.rank = clone[i - 1].rank; // 并列
+    } else {
+      team.rank = rank;
+    }
+    rank++;
   }
 }
 
