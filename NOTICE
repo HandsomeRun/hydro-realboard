@@ -1,0 +1,26 @@
+Realboard - HydroOJ 实时滚榜插件
+
+本项目基于 Hydro 官方 onsite-toolkit 开发，遵循 GNU Affero General Public License v3.0 (AGPL-3.0) 开源协议。
+
+原始项目信息：
+- 项目名称: Hydro onsite-toolkit
+- 项目地址: https://github.com/hydro-dev/Hydro/tree/master/packages/onsite-toolkit
+- 许可证: GNU Affero General Public License v3.0
+- 版权所有者: Hydro 开发团队
+
+本项目的修改和改进：
+- 实现了双阶段提交流程（Pending 和 Final Verdict）
+- 添加了分离的显示区域（A 区和 B 区）
+- 优化了动画效果和用户体验
+- 完善了封榜逻辑
+- 改进了状态管理和错误处理
+
+根据 AGPL-3.0 协议的要求：
+1. 如果您在网络服务器上运行本软件的修改版本，您必须向该服务器的用户提供修改版本的源代码。
+2. 任何基于本项目的衍生作品也必须遵循 AGPL-3.0 协议。
+3. 您必须保留原始版权声明和许可证信息。
+
+完整的许可证文本请参见 LICENSE 文件。
+
+Copyright (c) 2025 HandsomeRun
+Copyright (c) Hydro 开发团队 (原始项目) 

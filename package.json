@@ -4,12 +4,12 @@
   "main": "index.ts",
   "repository": "https://github.com/HandsomeRun/hydro-realboard.git",
   "author": "HandsomeRun",
-  "license": "MIT",
+  "license": "AGPL-3.0",
   "private": true,
   "dependencies": {
     "@react-spring/web": "^10.0.1",
     "moment": "^2.30.1",
     "react-use": "^17.6.0"
   },
-  "description": "Hydro OJ 实时滚动赛榜插件 Realboard"
+  "description": "Hydro OJ 实时滚动赛榜插件 Realboard - 基于官方 onsite-toolkit 的 fork 版本"
 }

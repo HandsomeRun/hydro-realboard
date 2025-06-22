@@ -1,6 +1,22 @@
 # Realboard - HydroOJ 实时滚榜插件
 
+> **项目来源说明**: 本项目是基于 [Hydro 官方 onsite-toolkit](https://github.com/hydro-dev/Hydro/tree/master/packages/onsite-toolkit) 的 fork 版本，遵循 [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE) 开源协议。
+
 这是一个为 [HydroOJ](https://hydro.js.org/) 系统设计的插件，旨在提供一个功能丰富、动画流畅的实时比赛排名展示板（滚榜）。它通过 WebSocket 接收实时的提交数据，并以动态、可视化的方式将其呈现给观众。
+
+## 效果展示
+
+0.  进入
+
+![进入](/test/0.png)
+
+1.  封榜前+排名变化
+   
+![封榜前+排名变化](/test/1.gif)
+
+2.  封榜后
+
+![封榜后](/test/2.gif)
 
 ## ✨ 主要功能
 
@@ -33,9 +49,11 @@
 
 ## 🚀 如何使用
 
-1.  将该插件放置于 HydroOJ 的 `packages` 目录下。
-2.  在 HydroOJ 的管理后台中启用该插件。
-3.  在比赛或作业的"应用"设置中添加 `realboard` 即可访问该页面。
+1.  先执行 `hydrooj addon create` 命令（如果您还没有执行过）。
+2.  将该插件放置于 HydroOJ 的 `/root/.hydro/addons/` 目录下。
+3.  进入 `/root/.hydro/addons/realboard/` 目录下，执行 `yarn install` 命令。
+4.  使用 `pm2 restart hydrooj` 重启。
+5.  可以在 `acm` 赛制的 `scoreboard` 中看到，请确保您有看到隐藏榜单的权限 `PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD`。
 
 ## ⚙️ 配置项
 
@@ -46,3 +64,24 @@
     - `FADEOUT_TIME`: 条目在榜单上显示的最长时间（默认为 5000 毫秒）。
 
 您可以根据需要直接修改这些常量来调整滚榜的行为。 
+
+## 📄 版权和许可证
+
+本项目基于 [Hydro 官方 onsite-toolkit](https://github.com/hydro-dev/Hydro/tree/master/packages/onsite-toolkit) 开发，遵循 [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE) 开源协议。
+
+### 原始项目
+- **Hydro onsite-toolkit**: [https://github.com/hydro-dev/Hydro/tree/master/packages/onsite-toolkit](https://github.com/hydro-dev/Hydro/tree/master/packages/onsite-toolkit)
+- **许可证**: GNU Affero General Public License v3.0
+
+### 本项目的修改
+本项目在原始 onsite-toolkit 的基础上进行了以下主要改进：
+- 实现了双阶段提交流程（Pending 和 Final Verdict）
+- 添加了分离的显示区域（A 区和 B 区）
+- 优化了动画效果和用户体验
+- 完善了封榜逻辑
+
+根据 AGPL-3.0 协议的要求，如果您在网络服务器上运行本软件的修改版本，您必须向该服务器的用户提供修改版本的源代码。
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request 来改进这个项目。请确保您的贡献也遵循 AGPL-3.0 协议。 
