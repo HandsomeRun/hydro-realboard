@@ -105,7 +105,7 @@ body {
 .ac {
     background-color: #009c00;
 }
-.failed, .WA, .wa {
+.failed, .WA, .wa, .re {
     background-color: #dd514c;
 }
 .frozen {
@@ -118,6 +118,12 @@ body {
 .pnd {
     background-color: #ff9800;
     color: #000;
+}
+.ce, .se, .ign {
+    background-color: #7f8c8d; /* Grey */
+}
+.tle, .mle {
+    background-color: #8e44ad; /* Purple */
 }
 .blink {
     animation: blink 500ms infinite;

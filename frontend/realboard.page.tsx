@@ -25,6 +25,8 @@ import { addPage, NamedPage, React, ReactDOM } from '@hydrooj/ui-default';
 import { animated, easings, useSprings, useTransition } from '@react-spring/web';
 import { ResolverInput } from '../interface';
 
+declare const $: any;
+
 const MAX_QUEUE = 9;
 const FADEOUT_TIME = 5000; // ms
 
@@ -36,28 +38,54 @@ const sharedState = {
   }
 };
 
-function status(problem) {
+const isACM = (rule: string) => ['acm', 'icpc'].includes(rule?.toLowerCase() || 'acm');
+
+function status(problem, rule: string, verdict?: string) {
   if (!problem) return 'untouched';
-  if (problem.pass) return 'ac';
-  if (!problem.old && !problem.frozen) return 'untouched';
   if (problem.frozen) return 'frozen';
-  return 'failed';
+  if (problem.pass) return 'ac';
+  if (isACM(rule)) {
+    if (!problem.old) return 'untouched';
+    if (verdict) {
+        if (/^(ce|se|ign)/i.test(verdict)) return 'ce';
+        if (/^(tle|mle)/i.test(verdict)) return 'tle';
+        if (/^re/i.test(verdict)) return 're';
+    }
+    return 'failed';
+  } else {
+    if (!problem.touched) return 'untouched';
+    if (verdict) {
+        if (/^(ce|se|ign)/i.test(verdict)) return 'ce';
+        if (/^(tle|mle)/i.test(verdict)) return 'tle';
+        if (/^re/i.test(verdict)) return 're';
+    }
+    return 'failed'; // partial or 0
+  }
 }
 
-function submissions(problem) {
-  const st = status(problem);
-  if (st === 'ac') { return `${problem.old} / ${problem.time}`; }
+function submissions(problem, rule: string, verdict?: string) {
+  const st = status(problem, rule, verdict);
   if (st === 'frozen') { return `${problem.old}+${problem.frozen}`; }
-  if (st === 'failed') { return problem.old; }
-  return String.fromCharCode('A'.charCodeAt(0) + problem.index);
+  
+  if (isACM(rule)) {
+    if (st === 'ac') { return `${problem.old} / ${problem.time}`; }
+    if (['failed', 'ce', 'tle', 're'].includes(st)) { return problem.old; }
+    return String.fromCharCode('A'.charCodeAt(0) + problem.index);
+  } else {
+    if (st === 'untouched') return String.fromCharCode('A'.charCodeAt(0) + problem.index);
+    return problem.score;
+  }
 }
 
-function processRank(teams) {
+function processRank(teams, rule: string) {
+  const acm = isACM(rule);
   const clone = [...teams];
   clone.sort((a, b) => {
-    if (b.score !== a.score) return b.score - a.score; // solved 降序
-    if (a.penalty !== b.penalty) return a.penalty - b.penalty; // penalty 升序
-    return 0; // 并列
+    if (b.score !== a.score) return b.score - a.score; // score/solved desc
+    if (acm) {
+        if (a.penalty !== b.penalty) return a.penalty - b.penalty; // penalty asc
+    }
+    return 0; 
   });
   let rank = 1;
   for (let i = 0; i < clone.length; i++) {
@@ -66,7 +94,7 @@ function processRank(teams) {
       team.rank = -1;
       continue;
     }
-    if (i > 0 && clone[i].score === clone[i - 1].score && clone[i].penalty === clone[i - 1].penalty) {
+    if (i > 0 && clone[i].score === clone[i - 1].score && (acm ? clone[i].penalty === clone[i - 1].penalty : true)) {
       team.rank = clone[i - 1].rank; // 并列
     } else {
       team.rank = rank;
@@ -92,7 +120,6 @@ function TeamItem({ team, style, data, ...props }) {
   // 获取题目状态样式
   const getProblemStatus = (problemId) => {
     const problemStatus = team.problems.find((idx) => idx.id === problemId);
-    const baseStatus = status(problemStatus);
     
     // 如果是当前提交的题目
     if (problemId === team.submissionProblem) {
@@ -114,22 +141,24 @@ function TeamItem({ team, style, data, ...props }) {
           // 重复提交已AC题目：显示AC结果，但保持原有样式
           return {
             className: `ac item`,
-            text: 'AC'
+            text: isACM(data.rule) ? 'AC' : team.submissionScore || 'AC'
           };
         } else {
           // 正常提交：显示实际结果
+          const verdictStatus = status(problemStatus, data.rule, team.submissionVerdict);
           return {
-            className: `${team.submissionVerdict === 'AC' ? 'ac' : 'wa'} item`,
-            text: team.submissionVerdict
+            className: `${verdictStatus} item`,
+            text: isACM(data.rule) ? team.submissionVerdict : (team.submissionScore ?? team.submissionVerdict)
           };
         }
       }
     }
     
     // 其他题目显示正常状态
+    const baseStatus = status(problemStatus, data.rule, problemStatus.verdict);
     return {
       className: `${baseStatus} item`,
-      text: submissions(problemStatus)
+      text: submissions(problemStatus, data.rule, problemStatus.verdict)
     };
   };
   
@@ -151,7 +180,7 @@ function TeamItem({ team, style, data, ...props }) {
       </div>
     </div>
     <div className="solved">{team.score}</div>
-    <div className="penalty">{team.penalty}</div>
+    <div className="penalty" style={{ display: isACM(data.rule) ? '' : 'none' }}>{team.penalty}</div>
   </animated.div>;
 }
 
@@ -178,36 +207,59 @@ function RealboardMain({ data, initialTeams }) {
     if (!team) return t;
     
     const problem = team.problems.find((p) => p.id === sub.problem);
-    if (problem?.pass) return t;
+    if (problem?.pass && isACM(data.rule)) return t; // ACM mode: ignore if already passed
     
     team.total++;
     
-    if (sub.time <= data.frozen) {
-      if (sub.verdict === 'AC') {
-        problem.pass = true;
-        problem.time = Math.floor(sub.time / 60);
-        team.score += 1;
-        team.penalty += Math.floor(sub.time / 60) + problem.old * 20;
+    if (data.frozen > 0 && data.frozen < data.duration && sub.time > data.frozen) {
+      problem.frozen = (problem.frozen || 0) + 1;
+    } else {
+      // Update verdict for display
+      problem.verdict = sub.verdict;
+      
+      if (isACM(data.rule)) {
+          if (sub.verdict === 'AC') {
+            problem.pass = true;
+            problem.time = Math.floor(sub.time / 60);
+            team.score += 1;
+            team.penalty += Math.floor(sub.time / 60) + problem.old * (data.penalty || 20);
+          }
+      } else {
+          // OI / Score based
+          const newScore = sub.score || 0;
+          const oldScore = problem.score || 0;
+          if (newScore > oldScore) {
+              team.score += (newScore - oldScore);
+              problem.score = newScore;
+              if (newScore >= 100 || sub.verdict === 'AC') problem.pass = true;
+          }
+          problem.touched = true;
       }
       problem.old += 1;
-    } else {
-        problem.frozen = (problem.frozen || 0) + 1;
     }
     
-    processRank(t);
+    processRank(t, data.rule);
     return t;
-  }, [data.frozen]);
+  }, [data.frozen, data.rule]);
 
   const createDisplayItem = React.useCallback((sub) => {
     const team = allTeams.find((v) => v.id === sub.team);
     if (!team) return null;
     
     const problem = team.problems.find((p) => p.id === sub.problem);
-    const isRepeatedAC = problem && problem.pass && sub.verdict === 'AC';
+    let isRepeatedAC = false;
+    if (isACM(data.rule)) {
+        isRepeatedAC = problem && problem.pass && sub.verdict === 'AC';
+    } else {
+        // For OI, if score is not higher, maybe treat as repeated?
+        // Or if score is already 100.
+        isRepeatedAC = (problem && problem.score >= 100 && sub.score >= 100) || (problem.score >= sub.score);
+    }
+    
     const isPending = sub.verdict === undefined;
-    const isFrozenSubmission = sub.time > data.frozen;
+    const isFrozenSubmission = data.frozen > 0 && data.frozen < data.duration && sub.time > data.frozen;
 
-    const newItem = { 
+    const newItem = {  
       ...team, 
       fade: false, 
       fadeKey: Math.random(),
@@ -215,6 +267,7 @@ function RealboardMain({ data, initialTeams }) {
       submissionId: sub.id,
       submissionProblem: sub.problem,
       submissionVerdict: isFrozenSubmission ? 'FROZEN' : sub.verdict,
+      submissionScore: sub.score,
       isPending,
       isFinal: !isPending,
       stage: isPending ? 'A' : 'B',
@@ -243,7 +296,7 @@ function RealboardMain({ data, initialTeams }) {
     }
     
     return newItem;
-  }, [allTeams, data.frozen, updateTeamsWithSubmission]);
+  }, [allTeams, data.frozen, data.rule, updateTeamsWithSubmission]);
 
   const handleWebSocketMessage = React.useCallback((msg) => {
     if (msg.type !== 'update') return;
@@ -375,6 +428,11 @@ export function start(data: ResolverInput) {
   $('title').text(`${data.name} - Realboard`);
   $('.header .title').text(`${data.name}`);
   
+  if (!isACM(data.rule)) {
+    $('.header .solved').text('Score');
+    $('.header .penalty').hide();
+  }
+
   const teams = data.teams.map((v) => ({
     id: v.id,
     rank: 0,
@@ -389,31 +447,50 @@ export function start(data: ResolverInput) {
       id: problem.id,
       index: idx,
       time: 0,
+      score: 0,
+      touched: false,
+      verdict: '',
     })),
   }));
   
-  const allSubmissions = data.submissions.filter((i) => !['CE', 'SE', 'FE', 'IGN'].includes(i.verdict)).sort((a, b) => a.time - b.time);
+  const allSubmissions = data.submissions.sort((a, b) => a.time - b.time);
   
   for (const submission of allSubmissions) {
     const team = teams.find((v) => v.id === submission.team);
     if (!team) continue;
-    const isFrozen = submission.time > data.frozen;
+    const isFrozen = submission.time > data.frozen && data.frozen > 0 && data.frozen < data.duration;
     const problem = team.problems.find((i) => i.id === submission.problem);
-    if (!problem || problem.pass) continue;
+    // For ACM, skip if already passed. For OI, we need to process unless it's worse.
+    if (!problem || (isACM(data.rule) && problem.pass)) continue;
+    
     team.total++;
     if (isFrozen) problem.frozen += 1;
     else {
-      if (submission.verdict === 'AC') {
-        problem.pass = true;
-        problem.time = Math.floor(submission.time / 60);
-        team.score += 1;
-        team.penalty += Math.floor(submission.time / 60) + problem.old * 20;
+      // Update verdict for display
+      problem.verdict = submission.verdict;
+
+      if (isACM(data.rule)) {
+          if (submission.verdict === 'AC') {
+            problem.pass = true;
+            problem.time = Math.floor(submission.time / 60);
+            team.score += 1;
+            team.penalty += Math.floor(submission.time / 60) + problem.old * (data.penalty || 20);
+          }
+      } else {
+          const newScore = submission.score || 0;
+          const oldScore = problem.score || 0;
+          if (newScore > oldScore) {
+              team.score += (newScore - oldScore);
+              problem.score = newScore;
+              if (newScore >= 100 || submission.verdict === 'AC') problem.pass = true;
+          }
+          problem.touched = true;
       }
       problem.old += 1;
     }
   }
   
-  processRank(teams);
+  processRank(teams, data.rule);
   
   const container = document.createElement('div');
   document.querySelector('.header')!.after(container);

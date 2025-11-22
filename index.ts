@@ -59,6 +59,7 @@ export function apply(ctx: Context) {
                     team: i.uid.toString(),  
                     problem: i.pid.toString(),  
                     verdict: STATUS_SHORT_TEXTS[i.status],  
+                    score: i.score || 0,
                     time: time(i.rid),  
                 }));  
                   
@@ -68,8 +69,10 @@ export function apply(ctx: Context) {
                     tdoc: tdoc, // <-- 添加这一行，直接传递 tdoc 对象  
                     payload: {  
                         name: tdoc.title,  
+                        rule: tdoc.rule,
                         duration: Math.floor((new Date(tdoc.endAt).getTime() - new Date(tdoc.beginAt).getTime()) / 1000),  
-                        frozen: Math.floor((new Date(tdoc.lockAt).getTime() - new Date(tdoc.beginAt).getTime()) / 1000),  
+                        frozen: Math.floor((new Date(tdoc.lockAt).getTime() - new Date(tdoc.beginAt).getTime()) / 1000),
+                        penalty: tdoc.rule?.penalty || 20,
                         problems: tdoc.pids.map((i, n) => ({ name: pid(n), id: i.toString() })),  
                         teams: teams.map((t) => ({  
                             id: t.uid.toString(),  
@@ -85,7 +88,7 @@ export function apply(ctx: Context) {
 
                 logger.info('display 执行完毕');
             },  
-            supportedRules: ['acm'],  
+            supportedRules: ['acm', 'oi', 'ioi', 'leduo', 'icpc'],  
         });  
     });  
 
@@ -206,6 +209,7 @@ export function apply(ctx: Context) {
                 team: i.uid.toString(),
                 problem: i.pid.toString(),
                 verdict: STATUS_SHORT_TEXTS[i.status],
+                score: i.score || 0,
                 time: time(i.rid),
             }));
         }
@@ -233,6 +237,7 @@ export function apply(ctx: Context) {
                 team: rdoc.uid.toString(),
                 problem: rdoc.pid.toString(),
                 verdict: STATUS_SHORT_TEXTS[rdoc.status],
+                score: rdoc.score || 0,
                 time: Math.floor((new Date(rdoc._id.getTimestamp()).getTime() - new Date(this.tdoc.beginAt).getTime()) / 1000) || 0,
             };
         }

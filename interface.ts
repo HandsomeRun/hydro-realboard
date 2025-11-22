@@ -23,8 +23,10 @@
 
 export interface ResolverInput {
   name: string;
+  rule: string;
   duration: number;
   frozen: number;
+  penalty: number;
   problems: {
     name: string;
     id: string;
@@ -40,6 +42,7 @@ export interface ResolverInput {
     team: string;
     problem: string;
     verdict: string;
+    score?: number;
     time: number;
   }[];
 } 
